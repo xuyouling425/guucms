@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+           http://www.springframework.org/schema/context
+		   http://www.springframework.org/schema/context/spring-context-3.0.xsd
+           http://www.springframework.org/schema/security
+           http://www.springframework.org/schema/security/spring-security-3.1.xsd">
+	
+ 	 <global-method-security pre-post-annotations="enabled"/>    
+
+	<!-- 过滤不要拦截的-->
+	<http pattern="/static/**" security="none" />
+	<http pattern="/loggedout.jsp" security="none" />
+	<http pattern="/**/*.jpg" security="none" />
+	<http pattern="/**/*.png" security="none" />
+	<http pattern="/**/*.gif" security="none" />
+	<http pattern="/**/*.css" security="none" />
+	<http pattern="/**/*.js" security="none" />
+	<http pattern="/login.jsp" security="none" />
+	<http pattern="/jsp/forgotpassword.jsp" security="none" />  
+	
+	<http auto-config="true">	   
+	
+        <access-denied-handler ref="myAccessDeniedHandler"/>            
+            	    
+      <!--   <remember-me key="8903284949398309284932048329"/>      -->  
+        <!-- 登陆页和忘记密码或注册等不需要过滤的页面 -->             
+        <form-login login-page="/login.jsp"   authentication-failure-url="/login.jsp?error=true" default-target-url="/index.jsp" />
+       
+        <logout logout-success-url="/login.jsp" /> 
+              
+       <!--  <session-management invalid-session-url="/sessionTimeout.jsp" /> -->               
+        <custom-filter ref="myFilter" before="FILTER_SECURITY_INTERCEPTOR"/>		
+	</http>
+	
+  
+    
+	<beans:bean id="myFilter" class="cn.net.guu.security.MyFilterSecurityInterceptor" >
+		<beans:property name="authenticationManager" ref="authenticationManager"></beans:property>
+		<beans:property name="accessDecisionManager" ref="myAccessDecisionManager"></beans:property>
+		<beans:property name="securityMetadataSource" ref="mySecurityMetadataSource"></beans:property>
+	</beans:bean>
+	  
+		   
+    <authentication-manager alias="authenticationManager">  
+        <authentication-provider user-service-ref="myUserDetailService">
+        <!--  
+             <password-encoder hash="md5" /> -->
+        </authentication-provider>  
+    </authentication-manager>  
+    
+     <beans:bean id="myUserDetailService" class="cn.net.guu.security.service.MyUserDetailsServiceImpl" >  
+     	 <beans:property name="userServiceImpl" ref="userServiceImpl"></beans:property>      
+    </beans:bean> 
+    
+    <beans:bean id="myAccessDecisionManager"  class="cn.net.guu.security.MyAccessDecisionManager">      
+    </beans:bean>  
+  
+    <beans:bean id="mySecurityMetadataSource" class="cn.net.guu.security.SecurityMetadataSourceExtendImpl" > 
+    	 <beans:property name="matcher" value="ant"/>    	      	
+    </beans:bean> 
+    
+    <beans:bean id="myAccessDeniedHandler" class="cn.net.guu.security.MyAccessDeniedExceptionHandler">        
+   		<beans:property name="errorPage" value="/error.jsp"></beans:property>
+    </beans:bean>
+    
+	<beans:bean id="userServiceImpl" class="cn.net.guu.security.service.UserServiceImpl"></beans:bean>
+    <beans:bean id="authorityServiceImpl" class="cn.net.guu.security.service.AuthorityServiceImpl"></beans:bean>
+    <beans:bean id="resourceServiceImpl" class="cn.net.guu.security.service.ResourceServiceImpl"></beans:bean>
+    
+   	<!-- SESSION信息库 -->
+	<beans:bean id="sessionRegistry" class="org.springframework.security.core.session.SessionRegistryImpl" />
+   
+ 
+</beans:beans>
